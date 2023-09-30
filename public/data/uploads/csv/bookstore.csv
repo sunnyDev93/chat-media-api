@@ -1,0 +1,4 @@
+_id,id,title,status,cover,pdf,createdAt,updatedAt,__v
+64f8b38540372ca758a311b7,2,wfae,published,image_2023_08_26T16_52_46_912Z.png,document (1).pdf,2023-09-06T17:14:45.783Z,2023-09-07T16:25:47.293Z,0
+64f9e3af96b427ec34abe13b,4,SFD,draft,favicon.ico,document.pdf,2023-09-07T14:52:31.865Z,2023-09-07T14:56:41.039Z,0
+64f9e3c896b427ec34abe13f,3,SSS,pending,favicon.ico,document.pdf,2023-09-07T14:52:56.158Z,2023-09-07T14:52:56.158Z,0
