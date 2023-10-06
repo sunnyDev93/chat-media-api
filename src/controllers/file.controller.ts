@@ -26,8 +26,13 @@ const upload = async (req : Request, res : Response) => {
 const transcribe = async (filePath : any) => {
     console.log("transcribe part");
 
-    try { // const apiKey = process.env.OPENAI_API_KEY;
-        const apiKey = "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";
+    try {
+        const apiKey = process.env.OPENAI_API_KEY;
+        console.log(apiKey);
+        console.log(typeof apiKey);
+
+
+        // const apiKey = "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";
 
 
         // Create a readable stream from the file
