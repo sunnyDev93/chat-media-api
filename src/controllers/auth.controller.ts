@@ -14,16 +14,22 @@ const register = async (req: Request, res: Response) => {
   const { email } = req.body;
   try {
     const existedUser = await User.findOne({ email: email });
+    let password = "";
+    if(req.body.password) {
+      password = bcrypt.hashSync(req.body?.password, 8)
+    }
     if (existedUser) {
       return res.status(StatusCodes.BAD_REQUEST).json({
-        errorMsg: "email is already existed"
+        errorMsg: "Email is already existed"
       });
     } else {
       const user = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 8),
-        role: req.body.role
+        uid: req.body.uid,
+        name: req.body?.name || "New User",
+        email: req.body?.email || null,
+        phN: req.body?.phN || null,
+        gid: req.body?.gid || null,
+        password: password || null
       })
       await user.save();
       return res.status(StatusCodes.OK).json({ message: "User is registered successfully" });
@@ -64,9 +70,9 @@ const login = async (req: Request, res: Response) => {
 }
 
 const fetchMe = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const { uid } = req.body;
   try {
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ uid: uid });
     return res.status(StatusCodes.OK).json(user);
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
@@ -74,9 +80,9 @@ const fetchMe = async (req: Request, res: Response) => {
 }
 
 const forgotPassword = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const { uid } = req.body;
   try {
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ uid: uid });
     if (!user)
       return res.status(400).send("user with given email doesn't exist");
 
@@ -86,7 +92,7 @@ const forgotPassword = async (req: Request, res: Response) => {
         userId: user._id,
         token: jwt.sign(
           {
-            email: email
+            uid: uid
           },
           secretKey,
           {
