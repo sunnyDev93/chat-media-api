@@ -1,51 +1,55 @@
-import mongoose, { Document, Schema, Model } from 'mongoose';
+import mongoose, {Document, Schema, Model} from 'mongoose';
 
-export interface IUser extends Document{
-  name: string;
-  email: string;
-  password: string;
-  role: string;
+export interface IUser extends Document {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
 }
 
-export interface IUserModel extends Model<IUser> {
-}
+export interface IUserModel extends Model < IUser > {}
 
 const userSchema: Schema = new Schema({
-  uid: {
-    type: String,
-    required: true,
-  },
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: false,
-  },
-  password: {
-    type: String,
-    required: false,
-  },
-  phN: {
-    type: String,
-    required: false
-  },
-  gid: {
-    type: String,
-    required: false
-  },
-  role: {
-    type: String,
-    required: true,
-    default: 'user'
-  },
-  token: {
-    type: String,
-    required: true,
-    default: "0"
-  },
-}, { timestamps: true })
+    uid: {
+        type: String,
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: false
+    },
+    password: {
+        type: String,
+        required: false
+    },
+    phN: {
+        type: String,
+        required: false
+    },
+    gid: {
+        type: String,
+        required: false
+    },
+    role: {
+        type: String,
+        required: true,
+        default: 'user'
+    },
+    token: {
+        type: Number,
+        required: true,
+        default: "0"
+    },
+    plan: {
+        type: String,
+        required: true,
+        default: "free"
+    }
+}, {timestamps: true})
 
 const User = mongoose.model<IUser, IUserModel>('User', userSchema);
 

@@ -28,10 +28,6 @@ const transcribe = async (filePath : any) => {
 
     try {
         const apiKey = process.env.OPENAI_API_KEY;
-        console.log(apiKey);
-        console.log(typeof apiKey);
-
-
         // const apiKey = "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";
 
 

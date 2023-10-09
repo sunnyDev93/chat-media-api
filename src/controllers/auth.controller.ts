@@ -1,122 +1,131 @@
-import { Request, Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
+import {Request, Response} from 'express';
+import {StatusCodes} from 'http-status-codes';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 import User from '../models/user';
-import { secretKey } from '../config';
+import {secretKey} from '../config';
 import {sendEmail} from "../utils/sendEmail";
 import Token from "../models/token";
 
 
+const register = async (req : Request, res : Response) => {
+    console.log(req.body);
 
-const register = async (req: Request, res: Response) => {
-  const { email } = req.body;
-  try {
-    const existedUser = await User.findOne({ email: email });
-    let password = "";
-    if(req.body.password) {
-      password = bcrypt.hashSync(req.body?.password, 8)
+    const uid = req.body ?. uid;
+    try {
+        const existedUser = await User.findOne({uid: uid});
+        let password = "";
+        if (req.body ?. password) {
+            password = bcrypt.hashSync(req.body ?. password, 8)
+        }
+        if (existedUser) {
+            return res.status(StatusCodes.BAD_REQUEST).json({errorMsg: "Email is already existed"});
+        } else {
+            const user = new User({
+                uid: req.body.uid,
+                name: req.body ?. name || "New User",
+                email: req.body ?. email || null,
+                phN: req.body ?. phN || null,
+                gid: req.body ?. gid || null,
+                password: password || null,
+                token: "10000"
+
+            })
+            await user.save();
+            return res.status(StatusCodes.OK).json({message: "User is registered successfully", user: user});
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     }
-    if (existedUser) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        errorMsg: "Email is already existed"
-      });
-    } else {
-      const user = new User({
-        uid: req.body.uid,
-        name: req.body?.name || "New User",
-        email: req.body?.email || null,
-        phN: req.body?.phN || null,
-        gid: req.body?.gid || null,
-        password: password || null
-      })
-      await user.save();
-      return res.status(StatusCodes.OK).json({ message: "User is registered successfully" });
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
-  }
 }
 
-const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email: email });
-    if (user) {
-      const passwordInvalid = bcrypt.compareSync(password, user.password);
-      if (passwordInvalid) {
-        const token = jwt.sign(
-          {
-            email: email
-          },
-          secretKey,
-          {
-            algorithm: 'HS256'
-          }
-        );
-        return res.status(StatusCodes.OK).json({accessToken: token})
-      } else {
-        return res.status(StatusCodes.UNAUTHORIZED).send("Password is incorrect")
-      }
-    } else {
-      return res.status(StatusCodes.NOT_FOUND).send("Not Found");
-    }
+const login = async (req : Request, res : Response) => {
+    const {uid, password} = req.body;
+    try {
+        const user = await User.findOne({uid: uid});
+        if (user) {
+            if (password) {
+                const passwordInvalid = bcrypt.compareSync(password, user.password);
+                if (passwordInvalid) {
+                    const token = jwt.sign({
+                        uid: uid
+                    }, secretKey, {algorithm: 'HS256'});
+                    return res.status(StatusCodes.OK).json({accessToken: token})
+                } else {
+                    return res.status(StatusCodes.UNAUTHORIZED).send("Password is incorrect")
+                }
+            } else {
+                const token = jwt.sign({
+                    uid: uid
+                }, secretKey, {algorithm: 'HS256'});
+                console.log(token);
 
-  } catch (err) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
-  }
+                return res.status(StatusCodes.OK).json({accessToken: token})
+            }
+        } else {
+            return res.status(StatusCodes.NOT_FOUND).send("Not Found");
+        }
+    } catch (err) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
+    }
 }
 
-const fetchMe = async (req: Request, res: Response) => {
-  const { uid } = req.body;
-  try {
-    const user = await User.findOne({ uid: uid });
-    return res.status(StatusCodes.OK).json(user);
-  } catch (err) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
-  }
+const fetchMe = async (req : Request, res : Response) => {
+    const {uid} = req.body;
+    try {
+        const user = await User.findOne({uid: uid});
+        return res.status(StatusCodes.OK).json(user);
+    } catch (err) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
+    }
 }
 
-const forgotPassword = async (req: Request, res: Response) => {
-  const { uid } = req.body;
-  try {
-    const user = await User.findOne({ uid: uid });
-    if (!user)
-      return res.status(400).send("user with given email doesn't exist");
+const forgotPassword = async (req : Request, res : Response) => {
+    const {uid} = req.body;
+    try {
+        const user = await User.findOne({uid: uid});
+        if (! user) 
+            return res.status(400).send("user with given email doesn't exist");
+        
 
-    let token = await Token.findOne({ userId: user._id });
-    if (!token) {
-      token = await new Token({
-        userId: user._id,
-        token: jwt.sign(
-          {
-            uid: uid
-          },
-          secretKey,
-          {
-            algorithm: 'HS256'
-          }
-        )
-      }).save();
+
+        let token = await Token.findOne({userId: user._id});
+        if (! token) {
+            token = await new Token({
+                userId: user._id,
+                token: jwt.sign(
+                    {
+                        uid: uid
+                    },
+                    secretKey,
+                    {algorithm: 'HS256'}
+                )
+            }).save();
+        }
+
+        const link = `${
+            process.env.BASE_URL
+        }/password-reset/${
+            user._id
+        }/${
+            token.token
+        }`;
+        await sendEmail(user.email, "Password reset", link);
+
+        res.send("password reset link sent to your email account");
+
+    } catch (err) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     }
-
-    const link = `${process.env.BASE_URL}/password-reset/${user._id}/${token.token}`;
-    await sendEmail(user.email, "Password reset", link);
-
-    res.send("password reset link sent to your email account");
-
-  } catch (err) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
-  }
 }
 
 const authController = {
-  register,
-  login,
-  forgotPassword,
-  fetchMe
+    register,
+    login,
+    forgotPassword,
+    fetchMe
 }
 
 export default authController;
