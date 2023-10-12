@@ -27,10 +27,8 @@ const transcribe = async (filePath : any) => {
     console.log("transcribe part");
 
     try {
-        const apiKey = "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";
+        const apiKey = process.env.OPENAI_API_KEY;
         console.log("apiKey", apiKey);
-
-        // const apiKey = "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";
 
 
         // Create a readable stream from the file
