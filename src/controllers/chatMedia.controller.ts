@@ -5,7 +5,9 @@ import {Request, Response} from 'express';
 const chatBot = async (req : Request, res : Response) => {
 
     const {question} = req.body;
-    const apiKey = process.env.OPENAI_API_KEY || "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";
+    const apiKey = process.env.OPENAI_API_KEY;
+    console.log("apikey", apiKey);
+
     try {
         const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
             prompt: `Translate the following code: "${question}"`,
