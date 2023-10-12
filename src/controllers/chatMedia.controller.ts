@@ -5,7 +5,7 @@ import {Request, Response} from 'express';
 const chatBot = async (req : Request, res : Response) => {
 
     const {question} = req.body;
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAIAPI_KEY;
     console.log("apikey", apiKey);
 
     try {

@@ -3,10 +3,12 @@
 # dependencies
 /node_modules
 server/node_modules
+/src/config
 # testing
 /coverage
 
 # production
+
 /build
 /public/data
 # misc

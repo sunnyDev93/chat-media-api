@@ -73,10 +73,12 @@ const login = async (req : Request, res : Response) => {
 }
 
 const fetchMe = async (req : Request, res : Response) => {
-    const {uid} = req.body;
+    const {uid} = req.body.decoded;
     try {
         const user = await User.findOne({uid: uid});
-        return res.status(StatusCodes.OK).json(user);
+        if (user) {
+            return res.status(StatusCodes.OK).json({user: user});
+        }
     } catch (err) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     }

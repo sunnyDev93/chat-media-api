@@ -1,6 +1,5 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import request from 'request';
 
 import {json, urlencoded} from 'body-parser';
 import cors from 'cors';
@@ -26,7 +25,9 @@ app.use(express.static('public'));
 
 
 const server = app.listen(port, () => {
-    console.log(`server is listening on port:${port}`)
+    console.log(`server is listening on port:${port}   ${
+        process.env.OPENAIAPI_KEY
+    }`)
 });
 
 export default server;

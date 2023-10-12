@@ -3,6 +3,7 @@ import multer from 'multer';
 import fileController from '../controllers/file.controller';
 import excelController from '../controllers/excel.controller';
 import csvController from "../controllers/csv.controller";
+import {verifyToken} from '../middlewares/auth.middleware';
 
 // const maxSize = 20 * 1024 * 1024;
 

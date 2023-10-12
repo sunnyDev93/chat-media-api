@@ -2,32 +2,61 @@ import {Request, Response} from "express";
 import {StatusCodes} from "http-status-codes";
 import * as fs from "fs";
 import axios from "axios";
+import User from "../models/user";
+import {getAudioDurationPromise, reduceToken} from "../utils/reduceToken";
 
 const upload = async (req : Request, res : Response) => {
     try {
-        if (req.file == undefined) {
+        console.log("uid", req.body.uid);
+        const uid = req.body.uid;
+        const user = await User.findOne({uid: uid});
+
+        if (req.file === undefined) {
             return res.status(400).send({message: "Please upload a file!"});
         }
-        const filePath = `./public/data/uploads/` + req.file.originalname
-        const transcript = await transcribe(filePath);
-        res.status(200).send({
-            fileName: req.file.originalname,
-            transcript: transcript,
-            message: "Uploaded the file successfully: " + req.file.originalname
+
+        const filePath = `./public/data/uploads/` + req.file.originalname;
+        const fileName = req.file.originalname;
+        // Get the audio duration
+        getAudioDurationPromise(fileName).then((duration) => { // Call reduceToken first
+            return reduceToken(duration, uid);
+        }).then((isTokenReduced) => { // Check if isTokenReduced is true before proceeding
+            if (isTokenReduced) { // If reduceToken is true, proceed to transcribe and other actions
+                return transcribe(filePath); // Assuming transcribe returns a Promise
+            } else { // If reduceToken is false, return an error message
+                throw new Error("Token reduction failed");
+            }
+        }).then((transcript) => { // You have the transcript, continue with the response
+            if (req.file) {
+                res.status(200).send({
+                    fileName: req.file.originalname,
+                    transcript: transcript,
+                    message: "Uploaded the file successfully: " + req.file.originalname,
+                    token: user ?. token
+                });
+            }
+        }).catch((error) => {
+            console.error("Error:", error);
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
         });
     } catch (err) {
-        console.log("fileUploadControllerErr=> ", err);
+        console.error("fileUploadControllerErr=> ", err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     }
+};
 
+// Your getDuration function remains the same
 
-}
+// Handle promise rejection and error here
+// upload(req, res).catch((err) => {
+//     console.error("Unhandled Promise Rejection: " + err);
+// });
 
 const transcribe = async (filePath : any) => {
     console.log("transcribe part");
 
     try {
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.OPENAIAPI_KEY;
         console.log("apiKey", apiKey);
 
 
@@ -51,7 +80,6 @@ const transcribe = async (filePath : any) => {
                 }`
             }
         });
-
         return response.data.text;
     } catch (error) {
         console.error('Error:', error);
