@@ -10,6 +10,11 @@ export interface IUser extends Document {
     gid: string;
     token: number;
     plan: string;
+    referalCode: string;
+    referedCode: string;
+    spentPrices: number;
+    influDate: Date;
+    discount: number;
 }
 
 export interface IUserModel extends Model < IUser > {}
@@ -53,6 +58,29 @@ const userSchema: Schema = new Schema({
         type: String,
         required: true,
         default: "free"
+    },
+    referalCode: {
+        type: String,
+        required: true,
+        default: ""
+    },
+    referedCode: {
+        type: String,
+        required: false,
+        default: ""
+    },
+    spentPrices: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    influDate: {
+        type: Date
+    },
+    discount: {
+        type: Number,
+        required: true,
+        default: 0
     }
 }, {timestamps: true})
 

@@ -1,7 +1,7 @@
 import User from "../models/user";
 
-export const chargeToken = async (uid : String, plan : string, token : number) => {
-    console.log("Charge");
+export const chargeToken = async (uid : String, plan : string, token : number, price : number) => {
+    console.log("Charge", price, typeof price);
 
     try {
         const user = await User.findOne({uid: uid});
@@ -9,8 +9,9 @@ export const chargeToken = async (uid : String, plan : string, token : number) =
             throw new Error('User not found');
         }
         if (user.token) {
-            user.token = token;
-            user.plan = plan
+            user.token += Number(token);
+            user.plan = plan.toLowerCase();
+            user.spentPrices += Number(price);
         }
 
         await user.save();

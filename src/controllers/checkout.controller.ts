@@ -14,6 +14,7 @@ interface StripeCheckoutSessionEvent {
                 uid: string;
                 plan: string;
                 token: number;
+                price: number;
                 // Add other metadata fields here
             };
             // Add other relevant fields here
@@ -26,8 +27,6 @@ interface StripeCheckoutSessionEvent {
 const createCheckoutSession = async (req : Request, res : Response) => {
     const {product, paymentMethodTypes} = req.body;
     const uid = (req.body ?. decoded ?. uid);
-
-    console.log(uid, product ?. name, product ?. tokenAmount);
 
     // Convert string payment method names to enum values
     const supportedPaymentMethods = paymentMethodTypes.map((method : any) => {
@@ -45,11 +44,12 @@ const createCheckoutSession = async (req : Request, res : Response) => {
                     currency: "eur",
                     product_data: {
                         name: product.name,
-                        description: product.description,
+                        description: product.service,
                         metadata: {
                             token: product ?. tokenAmount,
                             uid: uid,
-                            plan: product ?. name
+                            plan: product ?. name,
+                            price: product ?. price
                         }
                     },
                     unit_amount: product.price * 100
@@ -58,12 +58,13 @@ const createCheckoutSession = async (req : Request, res : Response) => {
             },
         ],
         mode: 'payment',
-        success_url: `${YOUR_DOMAIN}/?success=true&session_id={CHECKOUT_SESSION_ID}&uid={uid}`,
-        cancel_url: `${YOUR_DOMAIN}?canceled=true`,
+        success_url: `${YOUR_DOMAIN}/success`,
+        cancel_url: `${YOUR_DOMAIN}/cancel`,
         metadata: {
             uid: uid,
             plan: product ?. name,
-            token: product ?. tokenAmount
+            token: product ?. tokenAmount,
+            price: product ?. price
         }
     });
 
@@ -107,7 +108,6 @@ const createPortalSession = async (req : Request, res : Response) => {
 // You'll need to import your Stripe instance
 const webhook = async (req : Request, res : Response) => {
     const event = req.body as StripeCheckoutSessionEvent;
-    console.log("req Body: ", req.body);
 
     try { // Verify the event to ensure it came from Stripe
         const signature = req.headers['stripe-signature']!;
@@ -120,38 +120,20 @@ const webhook = async (req : Request, res : Response) => {
         const secret = 'whsec_15ae919e42abe3e23db05dccac7a3643a372d24328018a8f7cca5cca8e58d250';
 
         const header = stripe.webhooks.generateTestHeaderString({payload: payloadString, secret});
-        // const validEvent = stripe.webhooks.constructEvent(payloadString, header, secret);
-        // const validEvent = stripe.webhooks.constructEvent(JSON.stringify(event), signature, 'whsec_15ae919e42abe3e23db05dccac7a3643a372d24328018a8f7cca5cca8e58d250');
-        // Handle the 'checkout.session.completed' event
-        // const metadata = event.data.object.metadata;
-        // console.log("event.data: ", event.data);
 
-
-        // Access specific metadata fields
-        // const uid = metadata.uid;
-        // const plan = metadata.plan;
-        // const token = metadata.token;
-
-        // // Now, you can use userId and productId in your logic
-        // console.log('User ID :', uid);
-        // console.log('Plan :', plan);
-        // console.log('Token :', token);
         if (req.body.type === 'checkout.session.completed') {
-            // Extract metadata from the event
-            // const session = validEvent.data.object;
-            // const metadata = session.metadata;
             const metadata = event.data.object.metadata;
 
             // Access specific metadata fields
             const uid = metadata.uid;
             const plan = metadata.plan;
             const token = metadata.token;
+            const price = metadata.price;
+            console.log(plan);
+
 
             // Now, you can use userId and productId in your logic
-            console.log('User ID :', uid);
-            console.log('Plan :', plan);
-            console.log('Token :', token);
-            await chargeToken(uid, plan, token);
+            await chargeToken(uid, plan, token, price);
             // Update user's budget or perform other actions based on metadata
         }
 

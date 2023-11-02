@@ -6,7 +6,6 @@ const chatBot = async (req : Request, res : Response) => {
 
     const {question} = req.body;
     const apiKey = process.env.OPENAIAPI_KEY;
-    console.log("apikey", apiKey);
 
     try {
         const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
@@ -21,10 +20,8 @@ const chatBot = async (req : Request, res : Response) => {
 
         const answer = response.data.choices[0].text;
         res.json({answer});
-        console.log(answer);
 
     } catch (error) {
-        console.error('Error:', error);
         res.status(500).json({error: 'Internal Server Error'});
     }
 };
